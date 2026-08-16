@@ -46,11 +46,13 @@ const sketch = (p) => {
   };
 
   p.executeTrack2 = (note) => {
-    const step = ((note.currentCue - 1) % 6) + 1;
+    const step = (note.currentCue % 6);
     if (step === 1) {
       p.renderer?.resetZoomAndChange();
-    } else if (step === 2) {
+    } else if (step === 0) {
       p.renderer?.changeAndStartZoom(1);
+    } else {
+      p.renderer?.noteHit(note);
     }
   };
 
