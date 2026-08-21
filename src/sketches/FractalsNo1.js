@@ -33,7 +33,7 @@ const sketch = (p) => {
     await p.loadSong(audio, midi, (midiData) => {
       if (!midiData) return;
       p.scheduleCueSet(midiData.tracks[2].notes, 'executeTrack2');
-      // p.scheduleCueSet(midiData.tracks[9].controlChanges[74] ?? [], 'executeTrack9', true);
+      p.scheduleCueSet(midiData.tracks[9].controlChanges[74] ?? [], 'executeTrack9', true);
     });
   };
 
@@ -47,17 +47,19 @@ const sketch = (p) => {
 
   p.executeTrack2 = (note) => {
     const step = (note.currentCue % 6);
-    if (step === 1) {
-      p.renderer?.resetZoomAndChange();
-    } else if (step === 0) {
+    
+    if (step === 0) {
+      console.log('zoom' + Math.floor(note.currentCue));
+    
       p.renderer?.changeAndStartZoom(1);
     } else {
+      // inversion IFS flash (gasket), not the set fractal
       p.renderer?.noteHit(note);
     }
   };
 
   p.executeTrack9 = (cc) => {
-    p.renderer?.setZoomSpeed(cc.value ?? 0);
+    p.renderer?.setReveal(cc.value ?? 0);
   };
 
   p.resetAnimation = () => {

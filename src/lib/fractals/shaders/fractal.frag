@@ -15,6 +15,7 @@ uniform vec2 u_c;
 uniform float u_power;
 uniform float u_newton_power;
 uniform float u_relaxation;
+uniform float u_reveal;
 
 vec2 cpow(vec2 z, float p) {
   float r = length(z);
@@ -93,4 +94,11 @@ void main() {
   if (u_mode == 0) fragColor = julia(st);
   else if (u_mode == 2) fragColor = newton(st);
   else fragColor = mandelbrot(st);
+
+  float r = clamp(u_reveal, 0.0, 1.0);
+  float exposure = smoothstep(0.0, 0.65, r);
+  float radius = mix(0.08, 2.2, pow(r, 0.55));
+  float aperture = 1.0 - smoothstep(radius * 0.5, radius, length(uv));
+  aperture = mix(aperture, 1.0, smoothstep(0.85, 1.0, r));
+  fragColor.rgb *= exposure * aperture;
 }
