@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import InstagramCTA from '@components/InstagramCTA.astro';
+import FractalBadge from '@components/FractalBadge.astro';
 
 const { title = 'Sketch', description = '' } = Astro.props;
 ---
@@ -45,5 +46,6 @@ const { title = 'Sketch', description = '' } = Astro.props;
     ></path>
   </svg>
 
-  <!-- <InstagramCTA /> -->
+  <InstagramCTA />
+  <FractalBadge />
 </BaseLayout>

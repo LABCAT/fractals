@@ -1,0 +1,20 @@
+---
+// FractalBadge — label for the currently displayed fractal mode
+---
+
+<div id="fractal-badge" class="fractal-badge" aria-live="polite"></div>
+
+<style lang="scss">
+  .fractal-badge {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: var(--black);
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    color: var(--white);
+    pointer-events: none;
+  }
+</style>

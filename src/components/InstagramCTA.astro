@@ -34,12 +34,17 @@
 <style lang="scss">
   .instagram-cta {
     --shadow-colour: var(--cyan);
+    display: none;
     position: fixed;
-    bottom: 10px;
+    top: 10px;
     left: 10px;
     z-index: 1000;
     background: var(--black);
     border-radius: 8px;
+
+    @media (min-width: 480px) {
+      display: block;
+    }
 
     &__link {
       display: flex;

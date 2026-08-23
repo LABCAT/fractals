@@ -69,22 +69,42 @@ vec4 julia(vec2 z) {
   return shade(n, z);
 }
 
-vec4 newton(vec2 z) {
-  float p = u_newton_power;
-  float maxIt = min(float(u_max_iterations), 48.0);
-  float n = 0.0;
-  for (int i = 0; i < 48; i++) {
-    if (float(i) >= maxIt) break;
-    vec2 zp = cpow(z, p);
-    vec2 zp1 = cpow(z, p - 1.0);
-    vec2 f = zp - vec2(1.0, 0.0);
-    vec2 df = p * zp1;
-    float d = max(dot(df, df), 1e-8);
-    vec2 stepV = vec2(dot(f, df), f.y * df.x - f.x * df.y) / d;
-    z -= u_relaxation * stepV;
-    if (dot(stepV, stepV) < 1e-7) { n = float(i); break; }
+vec2 cmul(vec2 a, vec2 b) {
+  return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+}
+
+vec2 cpow_int(vec2 z, int n) {
+  vec2 r = vec2(1.0, 0.0);
+  for (int i = 0; i < 12; i++) {
+    if (i >= n) break;
+    r = cmul(r, z);
   }
-  float t = (atan(z.y, z.x) + 3.14159265) / 6.2831853 + n * 0.04 + u_time * 0.05;
+  return r;
+}
+
+vec4 newton(vec2 z) {
+  int p = int(clamp(u_newton_power, 3.0, 8.0) + 0.5);
+  float relax = clamp(u_relaxation, 0.85, 1.15);
+  float maxIt = min(float(u_max_iterations), 64.0);
+  float n = maxIt;
+  for (int i = 0; i < 64; i++) {
+    if (float(i) >= maxIt) break;
+    if (dot(z, z) < 1e-12) z = vec2(1e-4, 0.0);
+    vec2 zp1 = cpow_int(z, p - 1);
+    vec2 zp = cmul(zp1, z);
+    vec2 f = zp - vec2(1.0, 0.0);
+    vec2 df = float(p) * zp1;
+    float d = max(dot(df, df), 1e-12);
+    vec2 stepV = vec2(dot(f, df), f.y * df.x - f.x * df.y) / d;
+    z -= relax * stepV;
+    if (dot(stepV, stepV) < 1e-10) {
+      n = float(i);
+      break;
+    }
+  }
+  float a = atan(z.y, z.x);
+  float basin = (a + 3.14159265) / 6.2831853;
+  float t = basin + n * 0.03 + u_time * 0.05;
   return vec4(palette(t * u_color_shift), 1.0);
 }
 

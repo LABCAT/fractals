@@ -7,11 +7,17 @@ import { mulberry32, pick, randRange, shuffle } from './random.js';
 
 const MODE_ID = { julia: 0, mandelbrot: 1, newton: 2 };
 
+const MODE_LABEL = {
+  julia: 'Julia',
+  mandelbrot: 'Mandelbrot',
+  newton: 'Newton',
+};
+
 const STILL = SCENES.filter((s) => s.zoom < 1);
 const DIVE = SCENES.filter((s) => s.zoom >= 1);
 
 const DEFAULTS = {
-  maxZoomSpeed: 6,
+  maxZoomSpeed: 5,
   zoomMin: 0.05,
   zoomMax: 1e6,
   maxIterations: 140,
@@ -30,6 +36,13 @@ export const createFractalRenderer = (parent, options = {}) => {
     zIndex: '0',
   });
   (parent || document.body).appendChild(canvas);
+
+  const badge = document.getElementById('fractal-badge');
+  const updateBadge = () => {
+    if (!badge) return;
+    badge.textContent =
+      state.view === 'gasket' ? 'Inversion' : MODE_LABEL[state.mode] ?? state.mode;
+  };
 
   const gl = canvas.getContext('webgl2', {
     antialias: false,
@@ -79,6 +92,10 @@ export const createFractalRenderer = (parent, options = {}) => {
     time: gl.getUniformLocation(invertProgram, 'u_time'),
     hit: gl.getUniformLocation(invertProgram, 'u_hit'),
     drive: gl.getUniformLocation(invertProgram, 'u_drive'),
+    bounce: gl.getUniformLocation(invertProgram, 'u_bounce'),
+    span: gl.getUniformLocation(invertProgram, 'u_span'),
+    scale: gl.getUniformLocation(invertProgram, 'u_scale'),
+    fold: gl.getUniformLocation(invertProgram, 'u_fold'),
     kick: gl.getUniformLocation(invertProgram, 'u_kick'),
     home: gl.getUniformLocation(invertProgram, 'u_home'),
     palette: gl.getUniformLocation(invertProgram, 'u_palette'),
@@ -122,6 +139,14 @@ export const createFractalRenderer = (parent, options = {}) => {
     kick: { x: 0, y: 0 },
     kickTarget: { x: 0, y: 0 },
     home: { x: 0.62, y: 0.18 },
+    homeTarget: { x: 0.62, y: 0.18 },
+    bounce: 0,
+    bounceVel: 0,
+    scale: 1.36,
+    scaleTarget: 1.36,
+    span: 6.5,
+    spanTarget: 6.5,
+    fold: 8,
     time: 0,
   };
 
@@ -164,7 +189,7 @@ export const createFractalRenderer = (parent, options = {}) => {
     state.power = scene.power ?? 2;
 
     const zoom = scene.zoom * randRange(rng, 0.85, 1.25);
-    const nudge = 0.05 / zoom;
+    const nudge = scene.lockCenter ? 0 : 0.05 / zoom;
     state.zoom = zoom;
     state.targetZoom = zoom;
     state.homeCenter = {
@@ -182,7 +207,7 @@ export const createFractalRenderer = (parent, options = {}) => {
     }
     if (scene.newtonPower != null) state.newtonPower = scene.newtonPower;
     if (scene.relaxation != null) {
-      state.relaxation = scene.relaxation + randRange(rng, -0.08, 0.08);
+      state.relaxation = Math.max(0.9, Math.min(1.15, scene.relaxation + randRange(rng, -0.04, 0.04)));
     }
 
     restyle();
@@ -192,6 +217,12 @@ export const createFractalRenderer = (parent, options = {}) => {
     overlay.driveTarget = 0.2;
     overlay.kick = { x: 0, y: 0 };
     overlay.kickTarget = { x: 0, y: 0 };
+    overlay.homeTarget = { ...overlay.home };
+    overlay.scaleTarget = overlay.scale;
+    overlay.spanTarget = overlay.span;
+    overlay.bounce = 0;
+    overlay.bounceVel = 0;
+    updateBadge();
     dirty = true;
   };
 
@@ -216,7 +247,7 @@ export const createFractalRenderer = (parent, options = {}) => {
 
   const changeAndStartZoom = (speed = 1) => {
     const others = SCENES.filter((s) => s.mode !== state.mode && s.id !== state.sceneId);
-    const pool = others.length ? others : DIVE;
+    const pool = others.length === 0 ? DIVE : others;
     applyScene(pick(rng, pool));
     stillDeck = [];
     diveDeck = [];
@@ -224,23 +255,29 @@ export const createFractalRenderer = (parent, options = {}) => {
     dirty = true;
   };
 
-  /** Swap to circle-inversion IFS (not Mandelbrot/Julia); midi/vel kick the fold. */
   const noteHit = (note = {}) => {
     state.view = 'gasket';
     state.autoZoomSpeed = 0;
-    const midi = Number.isFinite(note.midi) ? note.midi : 60;
     const vel = Number.isFinite(note.velocity) ? note.velocity : 0.85;
-    const theta = (midi / 12) * Math.PI * 2;
-    const r = 0.35 + vel * 0.85;
-    overlay.kickTarget.x = Math.cos(theta) * r;
-    overlay.kickTarget.y = Math.sin(theta) * r;
-    overlay.hit = 1;
-    overlay.drive = Math.max(overlay.drive, 0.7);
-    overlay.driveTarget = 1;
-    overlay.home = {
-      x: 0.5 + randRange(rng, -0.15, 0.15),
-      y: 0.2 + randRange(rng, -0.15, 0.15),
+    const style = rng() < 0.8 ? 'open' : 'tight';
+    const len = style === 'open' ? randRange(rng, 0.74, 0.86) : randRange(rng, 0.50, 0.58);
+    const ang = rng() * Math.PI * 2;
+    overlay.homeTarget = {
+      x: Math.cos(ang) * len,
+      y: Math.sin(ang) * len,
     };
+    const rot = rng() * Math.PI * 2;
+    overlay.kickTarget.x = Math.cos(rot) * 0.04;
+    overlay.kickTarget.y = Math.sin(rot) * 0.04;
+    overlay.hit = 1;
+    overlay.drive = Math.max(overlay.drive, 0.55 + vel * 0.4);
+    overlay.driveTarget = 0.85 + vel * 0.15;
+    overlay.scaleTarget = randRange(rng, 1.3, 1.42);
+    overlay.spanTarget = style === 'open' ? 6.5 : randRange(rng, 10.8, 11.6);
+    overlay.fold = 8;
+    overlay.bounce = -0.96;
+    overlay.bounceVel = 8 * vel;
+    updateBadge();
     dirty = true;
   };
 
@@ -283,6 +320,9 @@ export const createFractalRenderer = (parent, options = {}) => {
     gl.uniform1f(iu.hit, overlay.hit);
     gl.uniform1f(iu.drive, overlay.drive);
     gl.uniform1f(iu.bounce, overlay.bounce);
+    gl.uniform1f(iu.span, overlay.span);
+    gl.uniform1f(iu.scale, overlay.scale);
+    gl.uniform1i(iu.fold, overlay.fold);
     gl.uniform2f(iu.kick, overlay.kick.x, overlay.kick.y);
     gl.uniform2f(iu.home, overlay.home.x, overlay.home.y);
     gl.uniform1i(iu.palette, state.palette);
@@ -328,10 +368,22 @@ export const createFractalRenderer = (parent, options = {}) => {
 
       overlay.drive += (overlay.driveTarget - overlay.drive) * Math.min(1, dt * 6);
       overlay.driveTarget += (0.75 - overlay.driveTarget) * dt * 0.35;
-      overlay.kick.x += (overlay.kickTarget.x - overlay.kick.x) * Math.min(1, dt * 16);
-      overlay.kick.y += (overlay.kickTarget.y - overlay.kick.y) * Math.min(1, dt * 16);
-      overlay.kickTarget.x += (0 - overlay.kickTarget.x) * dt * 2.2;
-      overlay.kickTarget.y += (0 - overlay.kickTarget.y) * dt * 2.2;
+      overlay.kick.x += (overlay.kickTarget.x - overlay.kick.x) * Math.min(1, dt * 10);
+      overlay.kick.y += (overlay.kickTarget.y - overlay.kick.y) * Math.min(1, dt * 10);
+      const a0 = Math.atan2(overlay.home.y, overlay.home.x);
+      const a1 = Math.atan2(overlay.homeTarget.y, overlay.homeTarget.x);
+      let da = a1 - a0;
+      if (da > Math.PI) da -= Math.PI * 2;
+      if (da < -Math.PI) da += Math.PI * 2;
+      const l0 = Math.hypot(overlay.home.x, overlay.home.y) || 0.8;
+      const l1 = Math.hypot(overlay.homeTarget.x, overlay.homeTarget.y);
+      const t = Math.min(1, dt * 7);
+      const a = a0 + da * t;
+      const l = l0 + (l1 - l0) * t;
+      overlay.home.x = Math.cos(a) * l;
+      overlay.home.y = Math.sin(a) * l;
+      overlay.scale += (overlay.scaleTarget - overlay.scale) * t;
+      overlay.span += (overlay.spanTarget - overlay.span) * t;
       overlay.hit += (0 - overlay.hit) * Math.min(1, dt * 4.5);
 
       // Squash → expand spring (low damp = more bounce)
@@ -339,7 +391,7 @@ export const createFractalRenderer = (parent, options = {}) => {
       const bDamp = 5.5;
       overlay.bounceVel += (-bStiff * overlay.bounce - bDamp * overlay.bounceVel) * dt;
       overlay.bounce += overlay.bounceVel * dt;
-      overlay.bounce = Math.max(-0.35, Math.min(0.45, overlay.bounce));
+      overlay.bounce = Math.max(-0.98, Math.min(0.48, overlay.bounce));
 
       overlay.time += dt * (0.4 + overlay.hit * 1.6);
       dirty = true;
@@ -367,3 +419,4 @@ export const createFractalRenderer = (parent, options = {}) => {
     state,
   };
 };
+

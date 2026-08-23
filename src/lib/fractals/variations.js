@@ -6,5 +6,5 @@ export const VARIATION_TEMPLATES = [
   { mode: 'julia' },
   { mode: 'newton', newtonPower: 3, relaxation: 1.0 },
   { mode: 'newton', newtonPower: 5, relaxation: 1.0 },
-  { mode: 'newton', newtonPower: 3, relaxation: 1.5 },
+  { mode: 'newton', newtonPower: 3, relaxation: 1.1 },
 ];

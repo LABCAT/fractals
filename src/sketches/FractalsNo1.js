@@ -49,8 +49,6 @@ const sketch = (p) => {
     const step = (note.currentCue % 6);
     
     if (step === 0) {
-      console.log('zoom' + Math.floor(note.currentCue));
-    
       p.renderer?.changeAndStartZoom(1);
     } else {
       // inversion IFS flash (gasket), not the set fractal
