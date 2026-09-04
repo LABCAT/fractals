@@ -1,5 +1,6 @@
 import p5 from "p5";
 import "@lib/p5.audioReact.js";
+import "@lib/p5.fps.js";
 import { createFractalRenderer } from "@lib/fractals/createFractalRenderer.js";
 
 const base = import.meta.env.BASE_URL || './';
@@ -29,6 +30,12 @@ const sketch = (p) => {
       p.togglePlayback();
     });
     p.renderer.resize(p.canvasWidth, p.canvasHeight);
+    // FPS badge (bottom-right, lab-label style). Shows when enabled; hidden during capture.
+    // Tip: toggle with `p.toggleFpsIndicator()` or enable via ?fps=1, or pass showFps to SketchLayout.
+    const wantsFps = new URLSearchParams(window.location.search).has('fps');
+    if (wantsFps) p.enableFpsIndicator();
+    // Expose for console / key toggle:
+    window.toggleFps = () => p.toggleFpsIndicator();
 
     await p.loadSong(audio, midi, (midiData) => {
       if (!midiData) return;

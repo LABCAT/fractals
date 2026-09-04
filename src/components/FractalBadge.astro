@@ -1,20 +1,7 @@
 ---
 // FractalBadge — label for the currently displayed fractal mode
+// Style now canonical in @labcat2020/animation-lab (lab-label). Local copy
+// at @styles/components/lab-label.scss keeps fractals vendored in sync.
 ---
 
-<div id="fractal-badge" class="fractal-badge" aria-live="polite"></div>
-
-<style lang="scss">
-  .fractal-badge {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    padding: 8px 12px;
-    background: var(--black);
-    font-family: 'Orbitron', monospace;
-    font-weight: 700;
-    color: var(--white);
-    pointer-events: none;
-  }
-</style>
+<div id="fractal-badge" class="lab-label lab-label--top-right" aria-live="polite"></div>

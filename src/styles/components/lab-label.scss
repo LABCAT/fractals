@@ -1,0 +1,35 @@
+// lab-label — shared HUD badge (canonical: @labcat2020/animation-lab/src/styles/components/lab-label.scss)
+// Promoted from FractalBadge visual style so both the fractal mode label (top-right)
+// and the FPS indicator (bottom-right) share the same token.
+.lab-label {
+  position: fixed;
+  z-index: 1000;
+  padding: 8px 12px;
+  background: var(--black);
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  color: var(--white);
+  pointer-events: none;
+  line-height: 1;
+  font-size: 14px;
+
+  &--top-right {
+    top: 10px;
+    right: 10px;
+  }
+
+  &--bottom-right {
+    bottom: 10px;
+    right: 10px;
+  }
+
+  &--fps {
+    min-width: 4.5em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &[hidden] {
+    display: none !important;
+  }
+}

@@ -1,0 +1,18 @@
+---
+// FpsIndicator — bottom-right FPS badge (mirrors @labcat2020/animation-lab)
+// Hidden by default; enable with p.enableFpsIndicator() (src/lib/p5.fps.js).
+
+interface Props {
+  id?: string;
+  hidden?: boolean;
+}
+
+const { id = 'fps-indicator', hidden = true } = Astro.props;
+---
+
+<div
+  id={id}
+  class="lab-label lab-label--bottom-right lab-label--fps"
+  aria-live="polite"
+  hidden={hidden}
+></div>

@@ -1,6 +1,7 @@
 // Import normalize.css for consistent base styling
 @import "./variables";
 @import "./mixins/breakpoints";
+@import "./components/lab-label";
 @import "normalize.css";
 
 $cursor-color: white;

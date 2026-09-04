@@ -2,8 +2,9 @@
 import BaseLayout from '@layouts/BaseLayout.astro';
 import InstagramCTA from '@components/InstagramCTA.astro';
 import FractalBadge from '@components/FractalBadge.astro';
+import FpsIndicator from '@components/FpsIndicator.astro';
 
-const { title = 'Sketch', description = '' } = Astro.props;
+const { title = 'Sketch', description = '', showFps = false } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -48,4 +49,5 @@ const { title = 'Sketch', description = '' } = Astro.props;
 
   <InstagramCTA />
   <FractalBadge />
+  <FpsIndicator hidden={!showFps} />
 </BaseLayout>
