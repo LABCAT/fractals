@@ -1,19 +1,14 @@
 ---
-import BaseLayout from '@layouts/BaseLayout.astro';
+import BaseLayout from '@labcat2020/animation-lab/layouts/BaseLayout.astro';
+import SiteHeader from '@labcat2020/animation-lab/components/SiteHeader.astro';
+import SeriesHome from '@labcat2020/animation-lab/components/SeriesHome.astro';
 import { getAllSketches } from '@/sketchMetadata.js';
 
 const sketches = getAllSketches();
+const tagline = 'Zoom in. It never ends. Audio-reactive fractal animations.';
 ---
 
-<BaseLayout title="LABCATS Sketchbook" description="Creative Coding Experiments.">
-  <h1>LABCATS Sketchbook</h1>
-  <p>Creative Coding Experiments.</p>
-  
-  
-  <h2>Available Sketches</h2>
-  <ul>
-    {sketches.map(sketch => (
-      <li><a href={`/${sketch.id}`}>{sketch.title}</a></li>
-    ))}
-  </ul>
+<BaseLayout title="Fractals | LABCAT Animations" description="Fractals: audio-reactive fractal animations by LABCAT.">
+  <SiteHeader slot="header" collapsible={false} />
+  <SeriesHome name="Fractals" tagline={tagline} sketches={sketches} planet="fractals" accentA="#0cdbf5" accentB="#ff0cb8" />
 </BaseLayout>
